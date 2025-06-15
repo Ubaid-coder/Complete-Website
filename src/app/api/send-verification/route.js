@@ -44,7 +44,7 @@ export async function POST(req) {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    const verificationUrl = `http://localhost:3000/verify-email?token=${token}`;
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`;
     console.log("🔗 Verification URL:", verificationUrl);
 
     const transporter = nodemailer.createTransport({
