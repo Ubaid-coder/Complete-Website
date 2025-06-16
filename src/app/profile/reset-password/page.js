@@ -1,44 +1,80 @@
 'use client';
-
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
-export default function ResetPasswordPage() {
-
-
-    const [password, setPassword] = useState('');
+export default function ChangePasswordForm() {
+    const [email, setemail] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [userName, setuserName] = useState("");
     const [loading, setLoading] = useState(false);
-
-
+    const router = useRouter();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        const res = await fetch("/api/change-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userName, email, newPassword }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            toast.success("✅ Password updated successfully!");
+            setTimeout(() => {
+                router.push('/profile')
+            }, 2000);
+            setuserName("");
+            setemail("");
+            setNewPassword("");
+            setLoading(false);
+        } else {
+            toast.error(data.error || "❌ Failed to update password");
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-[#0e1f3a] flex items-center justify-center px-4">
-            <form
-                onSubmit={handleSubmit}
-                className="bg-white/10 p-8 rounded-2xl shadow-lg backdrop-blur-md w-full max-w-md border border-white/20"
-            >
-                <h2 className="text-2xl font-bold text-yellow-300 text-center mb-6">🔒 Reset Password</h2>
-
-                <input
-                    type="password"
-                    required
-                    placeholder="Enter your new password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2 mb-4 rounded-lg bg-white/20 text-white border border-white/30 placeholder-white focus:outline-none"
-                />
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-2 bg-yellow-400 hover:bg-yellow-300 text-black font-bold rounded-lg transition"
-                >
-                    {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
+        <div className="h-screen flex justify-center items-center">
+            <div className="max-w-md mx-auto p-4 bg-white/10 text-white rounded-lg shadow">
+                <h2 className="text-xl font-bold mb-4">🔒 Change Password</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <input
+                        type="text"
+                        placeholder="Enter User Name"
+                        value={userName}
+                        onChange={(e) => setuserName(e.target.value)}
+                        className="w-full px-4 py-2 rounded bg-black/30 border border-gray-500"
+                        required
+                    />
+                    <input
+                        type="email"
+                        placeholder="Enter Your E-mail"
+                        value={email}
+                        onChange={(e) => setemail(e.target.value)}
+                        className="w-full px-4 py-2 rounded bg-black/30 border border-gray-500"
+                        required
+                    />
+                    <input
+                        type="password"
+                        placeholder="Enter New Password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full px-4 py-2 rounded bg-black/30 border border-gray-500"
+                        required
+                    />
+                    <button
+                        disabled={loading}
+                        type="submit"
+                        className={`${loading ? 'opacity-[0.5] cursor-not-allowed w-full bg-white text-purple-800 font-bold py-2 rounded-lg transition hover:bg-opacity-90': 'cursor-pointer w-full py-2 bg-blue-500 rounded hover:bg-blue-600 transition'}`}
+                            >
+                            Change Password
+                    </button>
             </form>
+
         </div>
+        </div >
     );
 }

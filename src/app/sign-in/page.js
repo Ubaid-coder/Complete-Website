@@ -100,6 +100,13 @@ export default function SignIn() {
             Sign up
           </Link>
         </p>
+
+        <p className="text-white text-sm text-center mt-6">
+          Forgot your password?{" "}
+          <Link href="/profile/reset-password" className="underline text-white hover:text-yellow-200">
+            Reset it
+          </Link>
+        </p>
       </div>
     </div>
   );
