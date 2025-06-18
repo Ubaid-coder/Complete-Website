@@ -34,7 +34,7 @@ export default function Cards() {
 
 
     return (
-        <section className='relative min-h-[100vh] bg-[#11172b] py-10'>
+        <section className='relative py-10'>
             {/* Dropdown Filter */}
             <div className="relative w-60  mb-10">
                 <div

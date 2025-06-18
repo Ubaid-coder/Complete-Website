@@ -4,14 +4,14 @@ import './not-found.css';
 const Loader = () => {
   return (
     <div className="notfound-wrapper">
-   
+
 
       {/* Stars animation */}
       <div className="box-of-star1">
         {/* same star divs */}
         <div className="star star-position1" />
-           <h1 className="error-code">404</h1>
-      <p className="notfound-text">Oops! Page Not Found</p>
+        <h1 className="error-code">404</h1>
+        <p className="notfound-text">Oops! Page Not Found</p>
         <div className="star star-position2" />
         <div className="star star-position3" />
         <div className="star star-position4" />

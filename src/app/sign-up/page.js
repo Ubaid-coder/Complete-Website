@@ -10,13 +10,14 @@ export default function SignUpPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [password, setPassword] = useState('');
+  const [userName, setuserName] = useState('')
+  const [email, setEmail] = useState('')
   const [justRegistered, setJustRegistered] = useState(false);
+  const [timer, setTimer] = useState(0);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -26,18 +27,31 @@ export default function SignUpPage() {
     }
   }, [status, router]);
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+
+
+  useEffect(() => {
+    let countdown;
+    if (timer > 0) {
+      countdown = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(countdown);
+  }, [timer]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!verificationCode || !password) {
+      toast.error("❌ Please enter OTP and password");
+      return;
+    }
     setLoading(true);
 
-    const res = await fetch("/api/send-verification", {
+    const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify({ userName, email, password, verificationCode }),
     });
     const data = await res.json();
 
@@ -45,10 +59,48 @@ export default function SignUpPage() {
 
     if (res.ok) {
       setJustRegistered(true);
+
+      setEmail('');
+      setuserName('');
+      setPassword('');
+      setVerificationCode('');
+      setOtpSent(false);
+      router.push('/sign-in')
+
       toast.success(data.message);
     } else {
       toast.error(data.message);
     }
+  };
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!email || !userName) {
+      toast.error("❌ Enter userName and email first");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userName }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("📧 OTP sent to your email");
+        setOtpSent(true);
+        setTimer(60); // 🔁 Start timer for 60 seconds
+      } else {
+        toast.error(data.error || "❌ Failed to send OTP");
+      }
+    } catch (err) {
+      toast.error("❌ Server error while sending OTP");
+    }
+    setLoading(false);
   };
 
   // Wait during session check
@@ -86,43 +138,68 @@ export default function SignUpPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            name="name"
-            placeholder="Name"
-            onChange={handleChange}
+            value={userName}
+            placeholder="Enter Your Name"
+            onChange={(e) => setuserName(e.target.value)}
             required
             className="w-full px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg placeholder-white focus:outline-none focus:ring-2 focus:ring-white/50"
           />
           <input
-            name="email"
+            value={email}
             type="email"
             placeholder="Email"
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg placeholder-white focus:outline-none focus:ring-2 focus:ring-white/50"
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            onChange={handleChange}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg placeholder-white focus:outline-none focus:ring-2 focus:ring-white/50"
           />
 
+
           <button
-            disabled={loading}
-            type="submit"
-            className={`${loading
-              ? "opacity-[0.5] cursor-not-allowed"
-              : ""
-              } w-full bg-white text-purple-800 font-bold py-2 rounded-lg transition hover:bg-opacity-90`}
+            type="button"
+            disabled={loading || timer > 0}
+            onClick={handleSendOtp}
+            className="cursor-pinter w-full py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Sending Email..." : "Send Verification Email"}
+            {timer > 0 ? `⏳ Resend in ${timer}s` : '📤 Send OTP'}
           </button>
+
+
+          {otpSent && (
+
+            <>
+              <input
+                value={verificationCode}
+                type="number"
+                placeholder="Enter a Verification code that we have sent on your email"
+                onChange={(e) => setVerificationCode(e.target.value)}
+                required
+                className="w-full px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg placeholder-white focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <input
+                value={password}
+                type="text"
+                placeholder="Enter a Strong Password"
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg placeholder-white focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2 bg-green-500 rounded hover:bg-green-600 transition"
+              >
+                ✅ Submit
+              </button>
+            </>
+          )
+          }
+
+
         </form>
 
         <p className="text-white text-sm text-center mt-6">
-         Already have an account?
+          Already have an account?
           <Link href="/sign-in" className="underline text-white hover:text-yellow-200">
             Sign In
           </Link>
